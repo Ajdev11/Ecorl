@@ -57,7 +57,8 @@ from .market import (
 	evolve_costs_random_walk,
 	approximate_consumer_surplus_per_consumer,
 )
-from .agents import baseline_myopic_markup
+from .agents import baseline_myopic_markup, epsilon_greedy_bandit_prices
+from .regulator import apply_price_bounds
 from ..utils.io import ensure_dir, write_json, write_parquet, append_log_line
 from ..utils.run_store import set_status
 
@@ -72,6 +73,8 @@ def _simulate_once(
 	cost_sigma: float,
 	price_floor: float | None,
 	price_ceiling: float | None,
+	policy: str,
+	policy_params: dict,
 	log_path: Path,
 	rng: np.random.Generator,
 ) -> Tuple[pd.DataFrame, Dict[str, float]]:
@@ -81,15 +84,57 @@ def _simulate_once(
 	records = []
 	cs_values = []
 
+	# Setup for bandit policy
+	if policy == "epsilon_bandit":
+		epsilon = float(policy_params.get("epsilon", 0.1))
+		num_actions = int(policy_params.get("num_actions", 15))
+		markup_min = float(policy_params.get("markup_min", 0.2))
+		markup_max = float(policy_params.get("markup_max", 3.0))
+		markup_grid = np.linspace(markup_min, markup_max, num_actions, dtype=float)
+		# Q-values and counts per firm-action
+		q_values = np.zeros((num_firms, num_actions), dtype=float)
+		action_counts = np.zeros((num_firms, num_actions), dtype=float)
+	else:
+		epsilon = 0.0  # unused
+		markup_grid = None  # type: ignore
+		q_values = None  # type: ignore
+		action_counts = None  # type: ignore
+
 	for t in range(time_periods):
-		# Firms choose prices via myopic markup rule (baseline)
-		prices = baseline_myopic_markup(costs=costs, alpha=alpha, regulated_floor=price_floor, regulated_ceiling=price_ceiling)
+		# Firms choose prices by selected policy
+		if policy == "myopic":
+			prices = baseline_myopic_markup(costs=costs, alpha=alpha, regulated_floor=price_floor, regulated_ceiling=price_ceiling)
+			chosen_actions = None
+		elif policy == "epsilon_bandit":
+			prices, chosen_actions = epsilon_greedy_bandit_prices(
+				costs=costs,
+				markup_grid=markup_grid,
+				q_values=q_values,
+				action_counts=action_counts,
+				epsilon=epsilon,
+				rng=rng,
+			)
+			# apply regulation bounds
+			prices = apply_price_bounds(prices, price_floor, price_ceiling)
+		else:
+			append_log_line(log_path, f"Unknown policy '{policy}', defaulting to myopic")
+			prices = baseline_myopic_markup(costs=costs, alpha=alpha, regulated_floor=price_floor, regulated_ceiling=price_ceiling)
+			chosen_actions = None
+
 		shares = logit_shares(prices=prices, qualities=qualities, alpha=alpha)
 		quantities = num_consumers * shares
 		profits = (prices - costs) * quantities
 
 		cs_t = approximate_consumer_surplus_per_consumer(prices=prices, qualities=qualities, alpha=alpha)
 		cs_values.append(cs_t)
+
+		# Bandit learning update with realized rewards (profit)
+		if policy == "epsilon_bandit":
+			for i in range(num_firms):
+				a = int(chosen_actions[i])  # type: ignore[index]
+				# Incremental average
+				action_counts[i, a] += 1.0
+				q_values[i, a] += (profits[i] - q_values[i, a]) / action_counts[i, a]
 
 		for i in range(num_firms):
 			records.append(
@@ -159,6 +204,8 @@ def ray_simulation_task(
 				cost_sigma=scenario.cost_process.sigma,
 				price_floor=(scenario.regulation.price_floor if scenario.regulation else None),
 				price_ceiling=(scenario.regulation.price_ceiling if scenario.regulation else None),
+			policy=scenario.policy,
+			policy_params=scenario.policy_params,
 				log_path=log_path,
 				rng=rng,
 			)

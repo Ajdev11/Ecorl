@@ -1,0 +1,18 @@
+{
+  "id": "3991ccf6-4e5b-40a3-a1c4-b05cb9a56aeb",
+  "name": "myopic-no-reg",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null,
+  "policy": "myopic",
+  "policy_params": {}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "5fbfc39c-25ce-4368-8b65-8da8e0aff701",
+  "name": "no-reg",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null
+}

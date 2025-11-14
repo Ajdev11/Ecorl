@@ -1,0 +1,16 @@
+{
+  "id": "f353b0cf-487d-4734-89b4-0b1b477f17f3",
+  "name": "exp",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null
+}
