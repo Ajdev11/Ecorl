@@ -1,0 +1,21 @@
+{
+  "id": "98ea0e4a-de02-4904-8d63-b3ef21f8f7de",
+  "name": "baseline",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": {
+    "price_floor": 0.0,
+    "price_ceiling": 10.0,
+    "audit_probability": null,
+    "cooldown_steps": null
+  }
+}
