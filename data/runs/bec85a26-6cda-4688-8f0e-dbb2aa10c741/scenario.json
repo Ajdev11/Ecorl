@@ -1,0 +1,26 @@
+{
+  "id": "7106883a-6c97-4564-b78e-e40db5a8b5a9",
+  "name": "q-learning",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null,
+  "policy": "q_learning",
+  "policy_params": {
+    "epsilon": 0.1,
+    "learning_rate": 0.1,
+    "discount": 0.95,
+    "num_state_bins": 10.0,
+    "markup_min": 0.2,
+    "markup_max": 3.0,
+    "num_actions": 15.0
+  }
+}

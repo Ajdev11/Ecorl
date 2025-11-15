@@ -57,7 +57,12 @@ from .market import (
 	evolve_costs_random_walk,
 	approximate_consumer_surplus_per_consumer,
 )
-from .agents import baseline_myopic_markup, epsilon_greedy_bandit_prices
+from .agents import (
+	baseline_myopic_markup,
+	epsilon_greedy_bandit_prices,
+	q_learning_prices,
+	actor_critic_prices,
+)
 from .regulator import apply_price_bounds
 from ..utils.io import ensure_dir, write_json, write_parquet, append_log_line
 from ..utils.run_store import set_status
@@ -84,42 +89,118 @@ def _simulate_once(
 	records = []
 	cs_values = []
 
-	# Setup for bandit policy
-	if policy == "epsilon_bandit":
-		epsilon = float(policy_params.get("epsilon", 0.1))
+	# Setup for learning policies
+	needs_grid = policy in ("epsilon_bandit", "q_learning", "actor_critic")
+	if needs_grid:
 		num_actions = int(policy_params.get("num_actions", 15))
 		markup_min = float(policy_params.get("markup_min", 0.2))
 		markup_max = float(policy_params.get("markup_max", 3.0))
 		markup_grid = np.linspace(markup_min, markup_max, num_actions, dtype=float)
-		# Q-values and counts per firm-action
+	else:
+		markup_grid = None  # type: ignore
+		num_actions = 0
+
+	# Bandit
+	if policy == "epsilon_bandit":
+		epsilon = float(policy_params.get("epsilon", 0.1))
 		q_values = np.zeros((num_firms, num_actions), dtype=float)
 		action_counts = np.zeros((num_firms, num_actions), dtype=float)
 	else:
-		epsilon = 0.0  # unused
-		markup_grid = None  # type: ignore
 		q_values = None  # type: ignore
 		action_counts = None  # type: ignore
+
+	# Q-learning
+	if policy == "q_learning":
+		epsilon = float(policy_params.get("epsilon", 0.1))
+		learning_rate = float(policy_params.get("learning_rate", 0.1))
+		discount = float(policy_params.get("discount", 0.95))
+		num_state_bins = int(policy_params.get("num_state_bins", 10))
+		num_states = num_state_bins * num_state_bins
+		q_table = np.zeros((num_states, num_firms, num_actions), dtype=float)
+		prev_state = None
+		prev_actions = None
+		prev_rewards = None
+	else:
+		q_table = None  # type: ignore
+		prev_state = None
+		prev_actions = None
+		prev_rewards = None
+		learning_rate = 0.0  # unused
+		discount = 0.0  # unused
+		num_state_bins = 0  # unused
+
+	# Actor-critic
+	if policy == "actor_critic":
+		learning_rate_policy = float(policy_params.get("learning_rate_policy", 0.01))
+		learning_rate_value = float(policy_params.get("learning_rate_value", 0.1))
+		discount = float(policy_params.get("discount", 0.95))
+		num_state_bins = int(policy_params.get("num_state_bins", 10))
+		num_states = num_state_bins * num_state_bins
+		# Initialize uniform policy and zero values
+		policy_probs = np.ones((num_states, num_firms, num_actions), dtype=float) / num_actions
+		value_table = np.zeros((num_states, num_firms), dtype=float)
+		prev_state = None
+		prev_actions = None
+		prev_rewards = None
+	else:
+		policy_probs = None  # type: ignore
+		value_table = None  # type: ignore
+		learning_rate_policy = 0.0  # unused
+		learning_rate_value = 0.0  # unused
 
 	for t in range(time_periods):
 		# Firms choose prices by selected policy
 		if policy == "myopic":
 			prices = baseline_myopic_markup(costs=costs, alpha=alpha, regulated_floor=price_floor, regulated_ceiling=price_ceiling)
 			chosen_actions = None
+			current_state = None
 		elif policy == "epsilon_bandit":
 			prices, chosen_actions = epsilon_greedy_bandit_prices(
 				costs=costs,
-				markup_grid=markup_grid,
-				q_values=q_values,
-				action_counts=action_counts,
+				markup_grid=markup_grid,  # type: ignore
+				q_values=q_values,  # type: ignore
+				action_counts=action_counts,  # type: ignore
 				epsilon=epsilon,
 				rng=rng,
 			)
-			# apply regulation bounds
+			prices = apply_price_bounds(prices, price_floor, price_ceiling)
+			current_state = None
+		elif policy == "q_learning":
+			prices, chosen_actions, current_state = q_learning_prices(
+				costs=costs,
+				markup_grid=markup_grid,  # type: ignore
+				q_table=q_table,  # type: ignore
+				prev_state=prev_state,
+				prev_actions=prev_actions,
+				prev_rewards=prev_rewards,
+				learning_rate=learning_rate,
+				discount=discount,
+				epsilon=epsilon,
+				num_state_bins=num_state_bins,
+				rng=rng,
+			)
+			prices = apply_price_bounds(prices, price_floor, price_ceiling)
+		elif policy == "actor_critic":
+			prices, chosen_actions, current_state = actor_critic_prices(
+				costs=costs,
+				markup_grid=markup_grid,  # type: ignore
+				policy_probs=policy_probs,  # type: ignore
+				value_table=value_table,  # type: ignore
+				prev_state=prev_state,
+				prev_actions=prev_actions,
+				prev_rewards=prev_rewards,
+				learning_rate_policy=learning_rate_policy,
+				learning_rate_value=learning_rate_value,
+				discount=discount,
+				num_state_bins=num_state_bins,
+				rng=rng,
+			)
 			prices = apply_price_bounds(prices, price_floor, price_ceiling)
 		else:
 			append_log_line(log_path, f"Unknown policy '{policy}', defaulting to myopic")
 			prices = baseline_myopic_markup(costs=costs, alpha=alpha, regulated_floor=price_floor, regulated_ceiling=price_ceiling)
 			chosen_actions = None
+			current_state = None
 
 		shares = logit_shares(prices=prices, qualities=qualities, alpha=alpha)
 		quantities = num_consumers * shares
@@ -128,13 +209,22 @@ def _simulate_once(
 		cs_t = approximate_consumer_surplus_per_consumer(prices=prices, qualities=qualities, alpha=alpha)
 		cs_values.append(cs_t)
 
-		# Bandit learning update with realized rewards (profit)
+		# Learning updates
 		if policy == "epsilon_bandit":
 			for i in range(num_firms):
 				a = int(chosen_actions[i])  # type: ignore[index]
-				# Incremental average
-				action_counts[i, a] += 1.0
-				q_values[i, a] += (profits[i] - q_values[i, a]) / action_counts[i, a]
+				action_counts[i, a] += 1.0  # type: ignore[index]
+				q_values[i, a] += (profits[i] - q_values[i, a]) / action_counts[i, a]  # type: ignore[index]
+		elif policy == "q_learning":
+			# Q-learning updates are done inside q_learning_prices; store for next iteration
+			prev_state = current_state
+			prev_actions = chosen_actions  # type: ignore[assignment]
+			prev_rewards = profits
+		elif policy == "actor_critic":
+			# Actor-critic updates are done inside actor_critic_prices; store for next iteration
+			prev_state = current_state
+			prev_actions = chosen_actions  # type: ignore[assignment]
+			prev_rewards = profits
 
 		for i in range(num_firms):
 			records.append(

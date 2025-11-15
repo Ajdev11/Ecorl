@@ -31,8 +31,8 @@ class Scenario(BaseModel):
 	cost_process: CostProcess
 	regulation: Optional[Regulation] = None
 	# Pricing/learning policy
-	policy: str = Field("myopic", description="Pricing policy: 'myopic' | 'epsilon_bandit'")
-	policy_params: Dict[str, float] = Field(default_factory=dict, description="Policy tuning, e.g. epsilon, markup_min/max, num_actions")
+	policy: str = Field("myopic", description="Pricing policy: 'myopic' | 'epsilon_bandit' | 'q_learning' | 'actor_critic'")
+	policy_params: Dict[str, float] = Field(default_factory=dict, description="Policy tuning: epsilon, markup_min/max, num_actions, learning_rate, discount, num_state_bins (for Q-learning/AC)")
 
 
 class ScenarioCreate(BaseModel):
@@ -43,8 +43,8 @@ class ScenarioCreate(BaseModel):
 	demand: DemandParams
 	cost_process: CostProcess
 	regulation: Optional[Regulation] = None
-	policy: str = Field("myopic", description="Pricing policy: 'myopic' | 'epsilon_bandit'")
-	policy_params: Dict[str, float] = Field(default_factory=dict, description="Policy tuning, e.g. epsilon, markup_min/max, num_actions")
+	policy: str = Field("myopic", description="Pricing policy: 'myopic' | 'epsilon_bandit' | 'q_learning' | 'actor_critic'")
+	policy_params: Dict[str, float] = Field(default_factory=dict, description="Policy tuning: epsilon, markup_min/max, num_actions, learning_rate, discount, num_state_bins (for Q-learning/AC)")
 
 
 class RunConfig(BaseModel):

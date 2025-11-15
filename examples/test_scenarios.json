@@ -1,0 +1,243 @@
+{
+  "myopic_baseline": {
+    "scenario": {
+      "name": "myopic-baseline",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "myopic",
+      "policy_params": {}
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "epsilon_bandit": {
+    "scenario": {
+      "name": "epsilon-bandit",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "epsilon_bandit",
+      "policy_params": {
+        "epsilon": 0.1,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 15
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "q_learning": {
+    "scenario": {
+      "name": "q-learning",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "q_learning",
+      "policy_params": {
+        "epsilon": 0.1,
+        "learning_rate": 0.1,
+        "discount": 0.95,
+        "num_state_bins": 10,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 15
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "actor_critic": {
+    "scenario": {
+      "name": "actor-critic",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "actor_critic",
+      "policy_params": {
+        "learning_rate_policy": 0.01,
+        "learning_rate_value": 0.1,
+        "discount": 0.95,
+        "num_state_bins": 10,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 15
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "q_learning_with_regulation": {
+    "scenario": {
+      "name": "q-learning-regulated",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": {
+        "price_floor": 0,
+        "price_ceiling": 2.6
+      },
+      "policy": "q_learning",
+      "policy_params": {
+        "epsilon": 0.1,
+        "learning_rate": 0.1,
+        "discount": 0.95,
+        "num_state_bins": 10,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 15
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "actor_critic_with_regulation": {
+    "scenario": {
+      "name": "actor-critic-regulated",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": {
+        "price_floor": 0,
+        "price_ceiling": 2.6
+      },
+      "policy": "actor_critic",
+      "policy_params": {
+        "learning_rate_policy": 0.01,
+        "learning_rate_value": 0.1,
+        "discount": 0.95,
+        "num_state_bins": 10,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 15
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "high_exploration_bandit": {
+    "scenario": {
+      "name": "high-exploration-bandit",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 100,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "epsilon_bandit",
+      "policy_params": {
+        "epsilon": 0.3,
+        "markup_min": 0.2,
+        "markup_max": 4.0,
+        "num_actions": 25
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 10
+    }
+  },
+  "long_run_q_learning": {
+    "scenario": {
+      "name": "long-run-q-learning",
+      "num_firms": 3,
+      "num_consumers": 10000,
+      "time_periods": 500,
+      "demand": {
+        "price_sensitivity": 0.5,
+        "mean_quality": 1.0
+      },
+      "cost_process": {
+        "initial_cost": 1.0,
+        "sigma": 0.1
+      },
+      "regulation": null,
+      "policy": "q_learning",
+      "policy_params": {
+        "epsilon": 0.05,
+        "learning_rate": 0.05,
+        "discount": 0.99,
+        "num_state_bins": 15,
+        "markup_min": 0.2,
+        "markup_max": 3.0,
+        "num_actions": 20
+      }
+    },
+    "config": {
+      "seed": 42,
+      "log_interval": 50
+    }
+  }
+}
+
