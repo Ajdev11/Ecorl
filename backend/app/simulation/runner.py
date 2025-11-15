@@ -180,6 +180,8 @@ def ray_simulation_task(
 	ensure_dir(run_dir)
 	log_path = run_dir / "stdout.log"
 	status_path = run_dir / "status.json"
+	scenario_path = run_dir / "scenario.json"
+	config_path = run_dir / "config.json"
 
 	try:
 		# Update status: running
@@ -188,6 +190,9 @@ def ray_simulation_task(
 
 		scenario = Scenario(**scenario_dict)
 		run_config = RunConfig(**run_config_dict)
+		# Persist inputs for aggregation/repro
+		write_json(scenario_path, scenario.model_dump())
+		write_json(config_path, run_config.model_dump())
 
 		rng = np.random.default_rng(run_config.seed)
 

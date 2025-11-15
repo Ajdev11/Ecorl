@@ -1,0 +1,23 @@
+{
+  "id": "c3fd1f7c-971a-405d-9218-27fb2686ebf9",
+  "name": "epsilon_bandit-nocap",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null,
+  "policy": "epsilon_bandit",
+  "policy_params": {
+    "epsilon": 0.1,
+    "markup_min": 0.2,
+    "markup_max": 3.0,
+    "num_actions": 15.0
+  }
+}

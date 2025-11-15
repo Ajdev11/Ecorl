@@ -1,0 +1,18 @@
+{
+  "id": "311d8ea9-6d8d-468c-b5bb-d24b7e4288be",
+  "name": "myopic-nocap",
+  "num_firms": 3,
+  "num_consumers": 10000,
+  "time_periods": 100,
+  "demand": {
+    "price_sensitivity": 0.5,
+    "mean_quality": 1.0
+  },
+  "cost_process": {
+    "initial_cost": 1.0,
+    "sigma": 0.1
+  },
+  "regulation": null,
+  "policy": "myopic",
+  "policy_params": {}
+}

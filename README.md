@@ -48,6 +48,9 @@ backend/
     utils/
       run_store.py         # Simple file-backed run registry
       io.py                # IO helpers for Parquet/JSON/logs
+scripts/
+  sweep_runs.py            # Launch small sweeps via API, write sweep CSV
+  aggregate_runs.py        # Aggregate all runs to one metrics CSV
 data/
   runs/                    # Per-run outputs (created at runtime)
   scenarios/               # Stored scenarios (JSON)
@@ -61,9 +64,30 @@ mlruns/                    # Local MLflow tracking (created at runtime)
   - `summary.json` – high-level metrics
   - `status.json` – run state: queued/running/succeeded/failed
   - `stdout.log` – progress stream for `/streams/{run_id}`
+  - `scenario.json` – exact scenario used for the run
+  - `config.json` – run configuration (seed, log interval)
 
 ## Next steps
 - Add richer agent policies (bandits, Q-learning, actor-critic)
 - Switch metadata to Postgres when needed
 - Add a Streamlit/Next.js UI to build scenarios and visualize results
+
+## Batch usage (optional)
+Install optional deps:
+```powershell
+python -m pip install requests pandas
+```
+
+Run a small sweep (myopic vs bandit, seeds 51–55):
+```powershell
+python scripts/sweep_runs.py
+```
+
+Aggregate coordination metrics across all runs:
+```powershell
+python scripts/aggregate_runs.py
+```
+Outputs:
+- `data/aggregates/sweep_results.csv` – summaries for the sweep
+- `data/aggregates/metrics.csv` – per-run metrics + coordination indicators
 
