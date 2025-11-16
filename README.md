@@ -18,7 +18,7 @@ python -m venv .venv
 2) Install dependencies
 ```powershell
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requiremeAnts.txt
 ```
 
 3) Run the API (auto-reload)
